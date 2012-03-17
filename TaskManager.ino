@@ -6,6 +6,9 @@
 
 #define SERIAL_DEBUG
 
+/* useful constants
+  F_CPU - CPU frequency
+ */
 
 class Task {
   public:
@@ -68,84 +71,6 @@ class TaskManager {
     Task overflow();
 };
 
-TaskManager::TaskManager(uint8_t nTasks, uint32_t useconds) {
-  TCCR1A = 0;                 // clear control register A 
-  TCCR1B = _BV(WGM13);        // set mode 8: phase and frequency correct pwm, stop the timer
-  nTasks = nTasks;
-  useconds = useconds;
-  tasks = (Task*) calloc (nTasks, sizeof(Task));
-  if (tasks==NULL) error();
-// setup the timer in here
-}
-
-void TaskManager::overflow() {
-  // as the timer ticks this is the interrupt that is called 
-  
-}
-
-void TaskManager::attach( void (*fn)() ) {
-// add into the Manager 
-}
-
-void TaskManager::start() {
-  // this function needs a rewrite as I understand it better
-  uint16_t tcnt1;
-  
-  TIMSK1 &= ~_BV(TOIE1);       
-  GTCCR |= _BV(PSRSYNC);               
-
-  oldSREG = SREG;                               
-  noInterrupts();                                            
-  TCNT1 = 0;                    
-  SREG = oldSREG;                       
-
-  do {  // Nothing -- wait until timer moved on from zero - otherwise get a phantom interrupt
-        oldSREG = SREG;
-        noInterrupts();
-        tcnt1 = TCNT1;
-        SREG = oldSREG;
-  } while (tcnt1==0); 
-  TIMSK1 = _BV(TOIE1);                                     // sets the timer overflow interrupt enable bit
-
-  TCCR1B |= clockSelectBits;
-
-  interrupts();
-}
-
-void TaskManager::stop() {
-  TCCR1B &= ~(_BV(CS10) | _BV(CS11) | _BV(CS12));
-}
-
-#define RESOLUTION 65536 // Timer1 is a 16 bit timer
-
-void TaskManager::period()
-{
-  // this function needs a rewrite as I understand it better
-  uint32_t cycles = (F_CPU / 2000000) * useconds;                              
-  if(cycles < RESOLUTION)              
-    clockSelectBits = _BV(CS10);            
-  else if((cycles >>= 3) < RESOLUTION) 
-    clockSelectBits = _BV(CS11);             
-  else if((cycles >>= 3) < RESOLUTION) 
-    clockSelectBits = _BV(CS11) | _BV(CS10); 
-  else if((cycles >>= 2) < RESOLUTION) 
-    clockSelectBits = _BV(CS12);           
-  else if((cycles >>= 2) < RESOLUTION) 
-    clockSelectBits = _BV(CS12) | _BV(CS10);  
-  else        
-    cycles = RESOLUTION - 1, clockSelectBits = _BV(CS12) | _BV(CS10);  
-  
-  oldSREG = SREG;                               
-  noInterrupts();                                                    
-  ICR1 = pwmPeriod = cycles;                                         
-  SREG = oldSREG;
-  
-  TCCR1B &= ~(_BV(CS10) | _BV(CS11) | _BV(CS12));
-  TCCR1B |= clockSelectBits;                                        
-}
-
-
-
 
 
 void error(void) {
@@ -178,7 +103,6 @@ void setup()
 
 void loop()
 {
-  Serial.println(F_CPU, DEC);
   delay(500);
   ++tsk;
   delay(500);
