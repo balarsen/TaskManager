@@ -35,6 +35,7 @@
 ////////////////////////////////////////////
 class Task {
   public:
+    // uint8_t taskNum;   // should a task know its own number?
     Task( void (*fn)(), uint32_t ticks);
     Task operator++();    //Prefix decrement operator  (++x)
     Task operator++(int); //Postfix decrement operator (x++)
@@ -86,16 +87,36 @@ Task Task::operator++() {
 class TaskManager {
   public:
     TaskManager(uint8_t nTasks, uint32_t useconds);  // nTasks is the number of task you will have
-    void attach( void (*fn)() );
+    void attach( Task *task, uint8_t taskNum );
     void start();
     void stop();
-  private:
+//    void overflow();
     Task* tasks;
     uint8_t nTasks;
-    void period();
+  private:
     uint32_t useconds;
-    Task overflow();
 };
+
+TaskManager::TaskManager(uint8_t nTasks, uint32_t useconds) {
+  nTasks = nTasks; // set to class variable
+  useconds = useconds;
+  tasks = (Task *) calloc(nTasks, sizeof(Task));
+}
+
+void TaskManager::attach(  Task *task, uint8_t taskNum ) {
+  tasks[taskNum] = *task;
+}
+
+void TaskManager::start() {
+   Timer1.initialize(useconds);
+   Timer1.start();
+   // Timer1.attachInterrupt( overflow );   // need to do something like this here...
+}
+
+void TaskManager::stop() {
+  Timer1.stop();
+}
+
 
 
 ////////////////////////////////////////////
@@ -119,10 +140,24 @@ void isr(void)
 
 
 
+TaskManager TM = TaskManager(1, 1000); // 1000 useconds
+
 Task tsk = Task(isr, 10);
+
+void overflow() {
+  uint8_t i;
+  for (i=0; i<TM.nTasks; i++){
+    TM.tasks[i]++; 
+  }
+}
+
+
 
 void setup()
 {
+  TM.attach(&tsk, 0); // start at zero
+  Timer1.attachInterrupt( overflow );  // don't want to have to manually do this
+
   pinMode(greenLEDpin, OUTPUT);   
   #ifdef SERIAL_DEBUG
     Serial.begin(19200);
@@ -131,10 +166,6 @@ void setup()
 
 void loop()
 {
-  delay(500);
-  ++tsk;
-  delay(500);
-  tsk++;
 }
 
 
