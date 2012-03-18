@@ -1,4 +1,24 @@
+/*
+ *  This program is free software: you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation, either version 3 of the License, or
+ *	(at your option) any later version.
+ *
+ *	This program is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  See GitHub project https://github.com/balarsen/TaskManager for latest 
+ *      version, please feel free to fork and/or post patches
+ */
+#ifndef TASKMANAGER_cpp
+#define TASKMANAGER_cpp
 
+#include <TimerOne.h>
 
 // the digital pins that connect to the LEDs
 #define redLEDpin 2
@@ -10,6 +30,9 @@
   F_CPU - CPU frequency
  */
 
+////////////////////////////////////////////
+// TASK definition, to header file
+////////////////////////////////////////////
 class Task {
   public:
     Task( void (*fn)(), uint32_t ticks);
@@ -57,6 +80,9 @@ Task Task::operator++() {
     
 }
 
+////////////////////////////////////////////
+// TaskManager definition, to header file
+////////////////////////////////////////////
 class TaskManager {
   public:
     TaskManager(uint8_t nTasks, uint32_t useconds);  // nTasks is the number of task you will have
@@ -72,7 +98,9 @@ class TaskManager {
 };
 
 
-
+////////////////////////////////////////////
+// Testing demo functions
+////////////////////////////////////////////
 void error(void) {
   #ifdef SERIAL_DEBUG
     Serial.println("ERROR STATE");  
@@ -108,3 +136,7 @@ void loop()
   delay(500);
   tsk++;
 }
+
+
+
+#endif
