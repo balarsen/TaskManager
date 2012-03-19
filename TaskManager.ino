@@ -140,9 +140,9 @@ void isr(void)
 
 
 
-TaskManager TM = TaskManager(1, 1000); // 1000 useconds
+TaskManager TM = TaskManager(1, 10000); // 10000 useconds
 
-Task tsk = Task(isr, 10);
+Task tsk = Task(isr, 100);
 
 void overflow() {
   uint8_t i;
