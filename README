@@ -1,3 +1,8 @@
 This project is an Arduino library to provide for a task manager to run various routines on a timer interrupt.
 
+This works by keeping track of ticks for each Task.  When the Task overflows its ticks it is run.  The duration of a tick is set in the instantiation of the TaskManager class.
+
+Limitations:
+- There is no plan for context switching, too much for this uC
+
 
