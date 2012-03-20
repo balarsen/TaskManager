@@ -18,33 +18,16 @@
 #ifndef TASKMANAGER_cpp
 #define TASKMANAGER_cpp
 
+#include <stdint.h>
+
+#include "TaskManager.h"
 #include <TimerOne.h>
 
-// the digital pins that connect to the LEDs
-#define redLEDpin 2
-#define greenLEDpin 3
-
 #define SERIAL_DEBUG
-
-/* useful constants
-  F_CPU - CPU frequency
- */
 
 ////////////////////////////////////////////
 // TASK definition, to header file
 ////////////////////////////////////////////
-class Task {
-  public:
-    // uint8_t taskNum;   // should a task know its own number?
-    Task( void (*fn)(), uint32_t ticks);
-    Task operator++();    //Prefix decrement operator  (++x)
-    Task operator++(int); //Postfix decrement operator (x++)
-  private:
-    void (*function)();
-    uint32_t counter;
-    uint32_t max_cnt;
-};
-
 Task::Task(void (*fn)(), uint32_t ticks ) {
   #ifdef SERIAL_DEBUG
     Serial.println("in constructor");
@@ -77,26 +60,12 @@ Task Task::operator++() {
   if (counter >= max_cnt) {
     counter = 0;  
     function();
-  }
-    
+  }   
 }
 
 ////////////////////////////////////////////
 // TaskManager definition, to header file
 ////////////////////////////////////////////
-class TaskManager {
-  public:
-    TaskManager(uint8_t nTasks, uint32_t useconds);  // nTasks is the number of task you will have
-    void attach( Task *task, uint8_t taskNum );
-    void start();
-    void stop();
-//    void overflow();
-    Task* tasks;
-    uint8_t nTasks;
-  private:
-    uint32_t useconds;
-};
-
 TaskManager::TaskManager(uint8_t nTasks, uint32_t useconds) {
   nTasks = nTasks; // set to class variable
   useconds = useconds;
@@ -116,58 +85,6 @@ void TaskManager::start() {
 void TaskManager::stop() {
   Timer1.stop();
 }
-
-
-
-////////////////////////////////////////////
-// Testing demo functions
-////////////////////////////////////////////
-void error(void) {
-  #ifdef SERIAL_DEBUG
-    Serial.println("ERROR STATE");  
-  #endif
-  digitalWrite(greenLEDpin, HIGH);
-  digitalWrite(redLEDpin, HIGH);
-}  
-
-void isr(void)
-{
-  digitalWrite(greenLEDpin, digitalRead(greenLEDpin) ^ 1);
-  #ifdef SERIAL_DEBUG
-    Serial.println("In the ISR");  
-  #endif
-}
-
-
-
-TaskManager TM = TaskManager(1, 10000); // 10000 useconds
-
-Task tsk = Task(isr, 100);
-
-void overflow() {
-  uint8_t i;
-  for (i=0; i<TM.nTasks; i++){
-    TM.tasks[i]++; 
-  }
-}
-
-
-
-void setup()
-{
-  TM.attach(&tsk, 0); // start at zero
-  Timer1.attachInterrupt( overflow );  // don't want to have to manually do this
-
-  pinMode(greenLEDpin, OUTPUT);   
-  #ifdef SERIAL_DEBUG
-    Serial.begin(19200);
-  #endif
-}
-
-void loop()
-{
-}
-
 
 
 #endif

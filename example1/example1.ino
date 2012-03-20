@@ -15,10 +15,9 @@
  *  See GitHub project https://github.com/balarsen/TaskManager for latest 
  *      version, please feel free to fork and/or post patches
  */
-#ifndef TASKMANAGER_cpp
-#define TASKMANAGER_cpp
 
 #include <TimerOne.h>
+#include <TaskManager.h>
 
 // the digital pins that connect to the LEDs
 #define redLEDpin 2
@@ -26,101 +25,8 @@
 
 #define SERIAL_DEBUG
 
-/* useful constants
-  F_CPU - CPU frequency
- */
-
 ////////////////////////////////////////////
-// TASK definition, to header file
-////////////////////////////////////////////
-class Task {
-  public:
-    // uint8_t taskNum;   // should a task know its own number?
-    Task( void (*fn)(), uint32_t ticks);
-    Task operator++();    //Prefix decrement operator  (++x)
-    Task operator++(int); //Postfix decrement operator (x++)
-  private:
-    void (*function)();
-    uint32_t counter;
-    uint32_t max_cnt;
-};
-
-Task::Task(void (*fn)(), uint32_t ticks ) {
-  #ifdef SERIAL_DEBUG
-    Serial.println("in constructor");
-  #endif
-  function = fn;
-  counter = 0;  
-  max_cnt = ticks;
-}
-
-Task Task::operator++(int val) {  
-  #ifdef SERIAL_DEBUG
-    Serial.print("in Task++: ");
-  #endif
-  Task::operator++();
-}
-
-Task Task::operator++() {
-  #ifdef SERIAL_DEBUG
-    Serial.print("in ++Task: ");
-    Serial.print("counter: ");
-    Serial.print(counter, DEC);
-  #endif
-  ++counter;
-  #ifdef SERIAL_DEBUG
-    Serial.print(" counter: ");
-    Serial.print(counter, DEC);
-    Serial.print(" max_cnt: ");
-    Serial.println(max_cnt, DEC);
-  #endif
-  if (counter >= max_cnt) {
-    counter = 0;  
-    function();
-  }
-    
-}
-
-////////////////////////////////////////////
-// TaskManager definition, to header file
-////////////////////////////////////////////
-class TaskManager {
-  public:
-    TaskManager(uint8_t nTasks, uint32_t useconds);  // nTasks is the number of task you will have
-    void attach( Task *task, uint8_t taskNum );
-    void start();
-    void stop();
-//    void overflow();
-    Task* tasks;
-    uint8_t nTasks;
-  private:
-    uint32_t useconds;
-};
-
-TaskManager::TaskManager(uint8_t nTasks, uint32_t useconds) {
-  nTasks = nTasks; // set to class variable
-  useconds = useconds;
-  tasks = (Task *) calloc(nTasks, sizeof(Task));
-}
-
-void TaskManager::attach(  Task *task, uint8_t taskNum ) {
-  tasks[taskNum] = *task;
-}
-
-void TaskManager::start() {
-   Timer1.initialize(useconds);
-   Timer1.start();
-   // Timer1.attachInterrupt( overflow );   // need to do something like this here...
-}
-
-void TaskManager::stop() {
-  Timer1.stop();
-}
-
-
-
-////////////////////////////////////////////
-// Testing demo functions
+// Demo functions
 ////////////////////////////////////////////
 void error(void) {
   #ifdef SERIAL_DEBUG
@@ -138,8 +44,6 @@ void isr(void)
   #endif
 }
 
-
-
 TaskManager TM = TaskManager(1, 10000); // 10000 useconds
 
 Task tsk = Task(isr, 100);
@@ -150,8 +54,6 @@ void overflow() {
     TM.tasks[i]++; 
   }
 }
-
-
 
 void setup()
 {
@@ -170,4 +72,3 @@ void loop()
 
 
 
-#endif
