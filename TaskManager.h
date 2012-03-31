@@ -26,28 +26,28 @@
 
 class Task {
   public:
-    // uint8_t taskNum;   // should a task know its own number?
-    Task( void (*fn)(), uint32_t ticks);
-    Task operator++();    //Prefix decrement operator  (++x)
-    Task operator++(int); //Postfix decrement operator (x++)
+    Task( uint32_t millisInterval );
+    virtual Task& operator()() = 0;
   private:
-    void (*function)();
-    uint32_t counter;
-    uint32_t max_cnt;
+    int _interval; // How often it runs in milliseconds
 };
+
 
 class TaskManager {
   public:
-    TaskManager(uint8_t nTasks, uint32_t useconds);  // nTasks is the number of task you will have
-    void attach( Task *task, uint8_t taskNum );
-    void start();
-    void stop();
-//    void overflow();
-    Task* tasks;
-    uint8_t nTasks;
-  private:
-    uint32_t useconds;
-};
+    TaskManager(uint8_t nTasks);  // nTasks is the number of task you will have
+    bool add( Task& task );
+    bool start();
+    bool stop();
 
+  private:
+    uint8_t nTasks;
+    Task* task;
+    long int* lastRan;
+    static const _window = 100; //< This is the time required for the 
+                                //  TaskManager to complete a loop (i.e. check
+                                //  if all tasks are scheduled to run within 
+                                //  the current time plus the window)
+};
 
 #endif

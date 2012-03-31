@@ -34,26 +34,34 @@ void error(void) {
   #endif
   digitalWrite(greenLEDpin, HIGH);
   digitalWrite(redLEDpin, HIGH);
-}  
-
-void isr(void)
-{
-  digitalWrite(greenLEDpin, digitalRead(greenLEDpin) ^ 1);
-  #ifdef SERIAL_DEBUG
-    Serial.println("In the ISR");  
-  #endif
 }
 
-TaskManager TM = TaskManager(1, 10000); // 10000 useconds
 
-Task tsk = Task(isr, 100);
-
-void overflow() {
-  uint8_t i;
-  for (i=0; i<TM.nTasks; i++){
-    TM.tasks[i]++; 
+class Blink : public Task
+{
+public:
+  Blink(int time) : _time(time) {}
+  void operator()() {
+    digitalWrite(greenLEDpin, digitalRead(greenLEDpin) ^ 1);
+    #ifdef SERIAL_DEBUG
+      Serial.println("In the ISR");  
+    #endif
   }
 }
+
+TaskManager TM = TaskManager(1); // 10000 useconds
+
+Blink blink(50);
+TM.add(blink);
+
+//Task tsk = Task(isr, 100);
+
+//void overflow() {
+ // uint8_t i;
+//  for (i=0; i<TM.nTasks; i++){
+//    TM.tasks[i]++; 
+//  }
+//}
 
 void setup()
 {
@@ -64,11 +72,12 @@ void setup()
   #ifdef SERIAL_DEBUG
     Serial.begin(19200);
   #endif
+  
+  TaskManager tm;
 }
 
 void loop()
 {
+  tm++;
 }
-
-
 
