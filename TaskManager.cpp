@@ -18,49 +18,17 @@
 #ifndef TASKMANAGER_cpp
 #define TASKMANAGER_cpp
 
-#include <stdint.h>
-
 #include "TaskManager.h"
-#include <TimerOne.h>
 
 #define SERIAL_DEBUG
 
 ////////////////////////////////////////////
 // TASK definition, to header file
 ////////////////////////////////////////////
-Task::Task(void (*fn)(), uint32_t ticks ) {
+Task::Task( uint32_t millisInterval ) {
   #ifdef SERIAL_DEBUG
     Serial.println("in constructor");
   #endif
-  function = fn;
-  counter = 0;  
-  max_cnt = ticks;
-}
-
-Task Task::operator++(int val) {  
-  #ifdef SERIAL_DEBUG
-    Serial.print("in Task++: ");
-  #endif
-  Task::operator++();
-}
-
-Task Task::operator++() {
-  #ifdef SERIAL_DEBUG
-    Serial.print("in ++Task: ");
-    Serial.print("counter: ");
-    Serial.print(counter, DEC);
-  #endif
-  ++counter;
-  #ifdef SERIAL_DEBUG
-    Serial.print(" counter: ");
-    Serial.print(counter, DEC);
-    Serial.print(" max_cnt: ");
-    Serial.println(max_cnt, DEC);
-  #endif
-  if (counter >= max_cnt) {
-    counter = 0;  
-    function();
-  }   
 }
 
 ////////////////////////////////////////////

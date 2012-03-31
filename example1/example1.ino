@@ -31,7 +31,7 @@
 class Blink : public Task
 {
 public:
-  Blink(int time) : _time(time) {}
+  Blink(uint32_t time) : _time(time) {}
   void operator()() {
     digitalWrite(greenLEDpin, digitalRead(greenLEDpin) ^ 1);
     #ifdef SERIAL_DEBUG
@@ -50,7 +50,7 @@ void setup()
   #ifdef SERIAL_DEBUG
     Serial.begin(19200);
   #endif
-  pinMode(greenLEDpin, OUTPUT);   
+  pinMode(greenLEDpin, OUTPUT);
   TM.add(blink);  // add the task to the TM
 }
 

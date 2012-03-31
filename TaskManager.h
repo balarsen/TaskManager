@@ -19,6 +19,7 @@
 #define TASKMANAGER_h
 
 #include <stdint.h>
+#include <arduino.h>
 
 /* useful constants
   F_CPU - CPU frequency
