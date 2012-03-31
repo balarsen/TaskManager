@@ -16,7 +16,6 @@
  *      version, please feel free to fork and/or post patches
  */
 
-#include <TimerOne.h>
 #include <TaskManager.h>
 
 // the digital pins that connect to the LEDs
@@ -28,14 +27,6 @@
 ////////////////////////////////////////////
 // Demo functions
 ////////////////////////////////////////////
-void error(void) {
-  #ifdef SERIAL_DEBUG
-    Serial.println("ERROR STATE");  
-  #endif
-  digitalWrite(greenLEDpin, HIGH);
-  digitalWrite(redLEDpin, HIGH);
-}
-
 
 class Blink : public Task
 {
@@ -44,40 +35,26 @@ public:
   void operator()() {
     digitalWrite(greenLEDpin, digitalRead(greenLEDpin) ^ 1);
     #ifdef SERIAL_DEBUG
-      Serial.println("In the ISR");  
+      Serial.println("in Blink");
     #endif
+
   }
 }
 
-TaskManager TM = TaskManager(1); // 10000 useconds
+TaskManager TM = TaskManager(1); // number of tasks
 
-Blink blink(50);
-TM.add(blink);
-
-//Task tsk = Task(isr, 100);
-
-//void overflow() {
- // uint8_t i;
-//  for (i=0; i<TM.nTasks; i++){
-//    TM.tasks[i]++; 
-//  }
-//}
+Blink blink(500); // runs every 500 milliseconds
 
 void setup()
 {
-  TM.attach(&tsk, 0); // start at zero
-  Timer1.attachInterrupt( overflow );  // don't want to have to manually do this
-
-  pinMode(greenLEDpin, OUTPUT);   
   #ifdef SERIAL_DEBUG
     Serial.begin(19200);
   #endif
-  
-  TaskManager tm;
+  pinMode(greenLEDpin, OUTPUT);   
+  TM.add(blink);  // add the task to the TM
 }
 
 void loop()
 {
-  tm++;
 }
 
