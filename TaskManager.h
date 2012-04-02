@@ -19,7 +19,6 @@
 #define TASKMANAGER_h
 
 #include <stdint.h>
-#include <arduino.h>
 
 /* useful constants
   F_CPU - CPU frequency
@@ -30,25 +29,29 @@ class Task {
     Task( uint32_t millisInterval );
     virtual Task& operator()() = 0;
   private:
-    int _interval; // How often it runs in milliseconds
+    Task(const Task& task);               // Disable copy constructor
+    int _interval;                        // How often it runs in milliseconds
 };
 
 
 class TaskManager {
   public:
-    TaskManager(uint8_t nTasks);  // nTasks is the number of task you will have
+    TaskManager( uint8_t numTasks, uint16_t window );
+    ~TaskManager();
     bool add( Task& task );
+    bool resize( uint8_t newNumTasks );
     bool start();
     bool stop();
 
   private:
-    uint8_t nTasks;
-    Task* task;
-    long int* lastRan;
-    static const _window = 100; //< This is the time required for the 
-                                //  TaskManager to complete a loop (i.e. check
-                                //  if all tasks are scheduled to run within 
-                                //  the current time plus the window)
+    uint8_t            _numTasks;      //< Number of tasks to manage
+    uint8_t            _numTasksAdded; //< Number of tasks that have been added
+    Task*              _task;
+    long unsigned int* _timeLastRan;
+    const uint16_t     _window;        //< This is the time required for the 
+                                       //  TaskManager to complete a loop (i.e. check
+                                       //  if all tasks are scheduled to run within 
+                                       //  the current time plus the window)
 };
 
 #endif

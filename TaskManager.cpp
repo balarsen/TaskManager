@@ -18,7 +18,17 @@
 #ifndef TASKMANAGER_cpp
 #define TASKMANAGER_cpp
 
+// C includes
+
+// C++ includes
+#include <cstdlib>
+
+// TPL includes
+#include <arduino.h>
+
+// Our includes
 #include "TaskManager.h"
+
 
 #define SERIAL_DEBUG
 
@@ -34,25 +44,98 @@ Task::Task( uint32_t millisInterval ) {
 ////////////////////////////////////////////
 // TaskManager definition, to header file
 ////////////////////////////////////////////
-TaskManager::TaskManager(uint8_t nTasks, uint32_t useconds) {
-  nTasks = nTasks; // set to class variable
-  useconds = useconds;
-  tasks = (Task *) calloc(nTasks, sizeof(Task));
+
+/**
+ *  \fn         Constructor
+ *  \brief      Grabs memory for the number of tasks requested
+ *  \param[in]  Number of tasks to manage/alloc memory
+ *  \param[in]  If a task is within this time window, run it
+ *              This prevents the task from getting skipped
+ *  \author     Brian Larsen, Nathan Barnett
+ */
+TaskManager::TaskManager( uint8_t numTasks, uint16_t window=100 ) : 
+    _numTasks(numTasks), _numTasksAdded(0), _window(window) {
+  _task         = (Task*) calloc( numTasks, sizeof(Task) );
+  _timeLastRan = (long unsigned int*) calloc( numTasks, sizeof(long unsigned int) );
 }
 
-void TaskManager::attach(  Task *task, uint8_t taskNum ) {
-  tasks[taskNum] = *task;
+/**
+ *  \fn         Destructor
+ *  \brief      Frees some memory
+ *  \author     Brian Larsen, Nathan Barnett
+ */
+TaskManager::~TaskManager() {
+  free( _task );
+  free( _timeLastRan );
 }
 
-void TaskManager::start() {
-   Timer1.initialize(useconds);
-   Timer1.start();
-   // Timer1.attachInterrupt( overflow );   // need to do something like this here...
+/**
+ *  \fn         add
+ *  \brief      Adds a task to the list of managed tasks
+ *  \param[in]  Reference to an existing task
+ *  \returns    True if successful
+ *  \author     Brian Larsen, Nathan Barnett
+ */
+bool TaskManager::add( Task& task ) {
+  if ( _numTasksAdded == _numTasks-1 )
+    return false;
+  _task[_numTasksAdded] = task;
+  ++_numTasksAdded;
+  return true;
 }
 
-void TaskManager::stop() {
+/**
+ *  \fn         start
+ *  \brief      Starts the clock and tasks
+ *  \returns    True if successful
+ *  \author     Brian Larsen, Nathan Barnett
+ */
+bool TaskManager::start() {
+  Timer1.initialize(useconds);
+  Timer1.start();
+  // Timer1.attachInterrupt( overflow );   // need to do something like this here...
+  return true;
+}
+
+/**
+ *  \fn         stop
+ *  \brief      Stops the timer and all of the tasks
+ *  \returns    True if successful
+ *  \author     Brian Larsen, Nathan Barnett
+ */
+bool TaskManager::stop() {
   Timer1.stop();
+  return true;
 }
 
+/**
+ *  \fn         resize
+ *  \brief      Reallocates the memory.
+ *
+ *              Lookup realloc() for more info.
+ *  \param[in]  The new number of tasks to manage
+ *  \returns    True if successful
+ *  \author     Brian Larsen, Nathan Barnett
+ */
+bool TaskManager::resize( uint8_t newNumTasks ) {
+  Task* tmpTask                 = NULL;
+  long unsigned int* tmpLastRan = NULL;
+  tmpTask    = (Task*) realloc( _task, newNumTasks*sizeof(Task) );
+  tmpLastRan = (long unsigned int*) realloc( _timeLastRan, newNumTasks*sizeof(long unsigned int) );
+  
+  _numTasks = newNumTasks;
+  // If the memory allocation succeeded...
+  if ( (tmpTask != NULL) && (tmpLastRan != NULL) ) {
+    _task        = tmpTask;
+    _timeLastRan = tmpLastRan;
+    // If we are losing management of some tasks
+    if ( newNumTasks <= _numTasksAdded )
+      _numTasksAdded = newNumTasks-1;
+    return true;
+  // If reallocation failed, return false (but we still have original memory)
+  } else {
+    return false;
+  }
+}
 
 #endif
